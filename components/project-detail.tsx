@@ -61,7 +61,7 @@ export function ProjectDetail({ project, onUpdate, onEditProject }: ProjectDetai
       if (!res.ok) throw new Error('保存失败')
       const updated: Project = await res.json()
       onUpdate(updated)
-      toast.success('已保存到本地数据')
+      toast.success('已保存到云端，换设备登录同一账号可同步查看')
     } catch {
       toast.error('保存失败，请重试')
     } finally {
@@ -129,14 +129,20 @@ export function ProjectDetail({ project, onUpdate, onEditProject }: ProjectDetai
             updatedAt: new Date().toISOString(),
           }
 
-          await fetch(`/api/projects/${project.id}`, {
+          const patchRes = await fetch(`/api/projects/${project.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ episodes: updatedEpisodes, status: updated.status }),
           })
-
-          onUpdate(updated)
-          toast.success(`第 ${episode.episodeNumber} 集分镜生成完成`)
+          if (!patchRes.ok) {
+            const errBody = await patchRes.json().catch(() => ({}))
+            throw new Error(
+              typeof errBody.error === 'string' ? errBody.error : '分镜已生成但保存到云端失败，请点击「保存项目」重试'
+            )
+          }
+          const savedAfterGen: Project = await patchRes.json()
+          onUpdate(savedAfterGen)
+          toast.success(`第 ${episode.episodeNumber} 集分镜已生成并保存到云端`)
         } else {
           throw new Error('响应数据格式错误');
         }
@@ -369,7 +375,7 @@ export function ProjectDetail({ project, onUpdate, onEditProject }: ProjectDetai
           </Button>
           <p className="flex items-start gap-1.5 text-[10px] leading-snug text-muted-foreground">
             <Cloud className="mt-0.5 h-3 w-3 shrink-0" />
-            编辑分镜后会自动保存。数据持久化在服务端本地文件中，刷新页面或从带链接的地址进入仍可恢复。
+            编辑分镜后会自动保存到 Supabase 云端（剧集与分镜表）。换浏览器或设备登录同一账号即可继续编辑。
           </p>
           <Button
             variant="default"
