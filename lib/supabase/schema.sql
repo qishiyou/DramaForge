@@ -91,6 +91,10 @@ CREATE POLICY "Users can view own profile" ON profiles
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
+-- 允许用户补建自己的 profile（触发器未执行或历史用户无外键目标时创建项目会失败）
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
 -- 项目表策略
 CREATE POLICY "Users can view own projects" ON projects
   FOR SELECT USING (auth.uid() = user_id);

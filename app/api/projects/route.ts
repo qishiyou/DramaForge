@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { ensureProfileForUser } from '@/lib/supabase/ensure-profile'
 import { createProjectForUser, fetchProjectsForUser } from '@/lib/supabase/project-service'
 import type { Episode } from '@/lib/types'
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status })
+}
+
+function serializeError(e: unknown): string {
+  if (e instanceof Error) return e.message
+  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
+    return (e as { message: string }).message
+  }
+  return '服务器错误'
 }
 
 export async function GET() {
@@ -19,7 +28,7 @@ export async function GET() {
     return NextResponse.json(projects)
   } catch (e) {
     console.error('[GET /api/projects]', e)
-    return jsonError(e instanceof Error ? e.message : '服务器错误', 500)
+    return jsonError(serializeError(e), 500)
   }
 }
 
@@ -30,6 +39,8 @@ export async function POST(req: Request) {
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) return jsonError('未登录', 401)
+
+    await ensureProfileForUser(supabase, user)
 
     const body = await req.json()
     const totalEpisodes = Number(body.totalEpisodes) || 1
@@ -56,6 +67,6 @@ export async function POST(req: Request) {
     return NextResponse.json(project, { status: 201 })
   } catch (e) {
     console.error('[POST /api/projects]', e)
-    return jsonError(e instanceof Error ? e.message : '服务器错误', 500)
+    return jsonError(serializeError(e), 500)
   }
 }
