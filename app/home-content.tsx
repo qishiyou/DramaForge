@@ -15,7 +15,26 @@ import { toast } from 'sonner'
 
 type View = 'dashboard' | 'create' | 'detail' | 'edit'
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+/** 非 2xx 时抛出，避免 SWR 把 { error: string } 当成 Project[] 导致 .filter 崩溃 */
+async function fetcher<T>(url: string): Promise<T> {
+  const res = await fetch(url)
+  let json: unknown
+  try {
+    json = await res.json()
+  } catch {
+    json = null
+  }
+  if (!res.ok) {
+    const msg =
+      json && typeof json === 'object' && json !== null && 'error' in json
+        ? String((json as { error: unknown }).error)
+        : res.statusText
+    const err = new Error(msg || `HTTP ${res.status}`) as Error & { status: number }
+    err.status = res.status
+    throw err
+  }
+  return json as T
+}
 
 export function HomeContent() {
   const router = useRouter()
@@ -24,7 +43,7 @@ export function HomeContent() {
   const urlEdit = searchParams.get('edit') === '1'
 
   const authContext = useAuth()
-  const { user, loading: authLoading } = authContext
+  const { user, loading: authLoading, signOut } = authContext
   const isConfigured = useMemo(() => authContext.isConfigured, [authContext.isConfigured])
   const [view, setView] = useState<View>('dashboard')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
@@ -44,7 +63,7 @@ export function HomeContent() {
     }
   }, [mounted, authLoading, user, isConfigured, router])
 
-  const { data: projects = [], mutate } = useSWR<Project[]>(
+  const { data: projectsData, error: projectsError, mutate } = useSWR<Project[]>(
     user && isConfigured ? '/api/projects' : null,
     fetcher,
     {
@@ -52,6 +71,18 @@ export function HomeContent() {
       revalidateOnFocus: true,
     }
   )
+
+  const projects = Array.isArray(projectsData) ? projectsData : []
+
+  useEffect(() => {
+    const status = projectsError && typeof projectsError === 'object' && 'status' in projectsError
+      ? (projectsError as Error & { status: number }).status
+      : undefined
+    if (status === 401) {
+      toast.error('登录已失效，请重新登录')
+      void signOut().then(() => router.replace('/auth'))
+    }
+  }, [projectsError, signOut, router])
 
   useEffect(() => {
     if (!needsUrlHydration) {
