@@ -20,6 +20,8 @@ function bodyToPatch(body: Record<string, unknown>): ProjectUpdateInput {
   if (body.visualStyle !== undefined) patch.visual_style = body.visualStyle as string
   if (body.storyline !== undefined) patch.storyline = body.storyline as string
   if (body.totalEpisodes !== undefined) patch.total_episodes = Number(body.totalEpisodes)
+  if (body.episodeMinMinutes !== undefined) patch.episode_min_minutes = Number(body.episodeMinMinutes)
+  if (body.episodeMaxMinutes !== undefined) patch.episode_max_minutes = Number(body.episodeMaxMinutes)
   if (body.status !== undefined) patch.status = body.status as string
   if (body.characters !== undefined) patch.characters = body.characters as Character[]
   if (body.episodes !== undefined) patch.episodes = body.episodes as Episode[]

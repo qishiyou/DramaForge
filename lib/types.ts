@@ -99,6 +99,10 @@ export interface Project {
   visualStyle: VisualStyle
   storyline: string
   totalEpisodes: number
+  /** 每集最小时长（分钟） */
+  episodeMinMinutes: number
+  /** 每集最大时长（分钟） */
+  episodeMaxMinutes: number
   characters: Character[]
   episodes: Episode[]
   status: ProjectStatus

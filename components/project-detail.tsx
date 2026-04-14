@@ -85,6 +85,8 @@ export function ProjectDetail({ project, onUpdate, onEditProject }: ProjectDetai
             genre: project.genre,
             visualStyle: project.visualStyle,
             storyline: project.storyline,
+            episodeMinMinutes: project.episodeMinMinutes,
+            episodeMaxMinutes: project.episodeMaxMinutes,
             characters: project.characters,
           }),
         })
@@ -427,6 +429,9 @@ export function ProjectDetail({ project, onUpdate, onEditProject }: ProjectDetai
                       已完成
                     </Badge>
                   )}
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    每集 {project.episodeMinMinutes}-{project.episodeMaxMinutes} 分钟
+                  </Badge>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   上次保存：{formatSavedAt(project.updatedAt)}

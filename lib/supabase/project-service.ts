@@ -68,6 +68,8 @@ function mapProject(
     visualStyle: row.visual_style as VisualStyle,
     storyline: row.storyline,
     totalEpisodes: row.total_episodes,
+    episodeMinMinutes: row.episode_min_minutes ?? 1,
+    episodeMaxMinutes: row.episode_max_minutes ?? 1.5,
     status: row.status as ProjectStatus,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -189,6 +191,8 @@ export async function createProjectForUser(
     visual_style: string
     storyline: string
     total_episodes: number
+    episode_min_minutes: number
+    episode_max_minutes: number
     characters: Character[]
     episodes: Episode[]
   }
@@ -204,6 +208,8 @@ export async function createProjectForUser(
     visual_style: body.visual_style,
     storyline: body.storyline,
     total_episodes: body.total_episodes,
+    episode_min_minutes: body.episode_min_minutes,
+    episode_max_minutes: body.episode_max_minutes,
     status: '草稿',
     created_at: now,
     updated_at: now,
@@ -251,6 +257,8 @@ export type ProjectUpdateInput = Partial<{
   visual_style: string
   storyline: string
   total_episodes: number
+  episode_min_minutes: number
+  episode_max_minutes: number
   status: string
   characters: Character[]
   episodes: Episode[]
@@ -272,6 +280,8 @@ export async function updateProjectForUser(
   if (patch.visual_style !== undefined) row.visual_style = patch.visual_style
   if (patch.storyline !== undefined) row.storyline = patch.storyline
   if (patch.total_episodes !== undefined) row.total_episodes = patch.total_episodes
+  if (patch.episode_min_minutes !== undefined) row.episode_min_minutes = patch.episode_min_minutes
+  if (patch.episode_max_minutes !== undefined) row.episode_max_minutes = patch.episode_max_minutes
   if (patch.status !== undefined) row.status = patch.status
 
   const touchesProjectRow =
@@ -280,6 +290,8 @@ export async function updateProjectForUser(
     patch.visual_style !== undefined ||
     patch.storyline !== undefined ||
     patch.total_episodes !== undefined ||
+    patch.episode_min_minutes !== undefined ||
+    patch.episode_max_minutes !== undefined ||
     patch.status !== undefined ||
     patch.characters !== undefined ||
     patch.episodes !== undefined

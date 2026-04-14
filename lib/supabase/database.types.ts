@@ -45,6 +45,8 @@ export interface Database {
           visual_style: string
           storyline: string
           total_episodes: number
+          episode_min_minutes: number
+          episode_max_minutes: number
           status: string
           created_at: string
           updated_at: string
@@ -58,6 +60,8 @@ export interface Database {
           visual_style: string
           storyline: string
           total_episodes: number
+          episode_min_minutes?: number
+          episode_max_minutes?: number
           status?: string
           created_at?: string
           updated_at?: string
@@ -70,6 +74,8 @@ export interface Database {
           visual_style?: string
           storyline?: string
           total_episodes?: number
+          episode_min_minutes?: number
+          episode_max_minutes?: number
           status?: string
           created_at?: string
           updated_at?: string

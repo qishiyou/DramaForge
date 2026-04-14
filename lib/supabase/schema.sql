@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS projects (
   visual_style TEXT NOT NULL,
   storyline TEXT NOT NULL,
   total_episodes INTEGER NOT NULL,
+  episode_min_minutes DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+  episode_max_minutes DOUBLE PRECISION NOT NULL DEFAULT 1.5,
   status TEXT DEFAULT '草稿',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

@@ -153,6 +153,8 @@ export function HomeContent() {
       visualStyle: VisualStyle
       storyline: string
       totalEpisodes: number
+      episodeMinMinutes: number
+      episodeMaxMinutes: number
       characters: Character[]
     }) => {
       setCreating(true)

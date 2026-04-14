@@ -27,6 +27,8 @@ interface ProjectFormProps {
     visualStyle: VisualStyle
     storyline: string
     totalEpisodes: number
+    episodeMinMinutes: number
+    episodeMaxMinutes: number
     characters: Character[]
   }) => void
   onCancel: () => void
@@ -47,11 +49,14 @@ function createEmptyCharacter(): Character {
 }
 
 export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps) {
+  const durationOptions = [0.5, 1, 1.5, 2, 2.5, 3]
   const [title, setTitle] = useState('')
   const [genre, setGenre] = useState<Genre>('复仇')
   const [visualStyle, setVisualStyle] = useState<VisualStyle>('真人实拍')
   const [storyline, setStoryline] = useState('')
   const [totalEpisodes, setTotalEpisodes] = useState(3)
+  const [episodeMinMinutes, setEpisodeMinMinutes] = useState(1)
+  const [episodeMaxMinutes, setEpisodeMaxMinutes] = useState(1.5)
   const [characters, setCharacters] = useState<Character[]>([createEmptyCharacter()])
   const [extracting, setExtracting] = useState(false)
 
@@ -104,7 +109,18 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit({ title, genre, visualStyle, storyline, totalEpisodes, characters })
+    const safeMin = Math.min(episodeMinMinutes, episodeMaxMinutes)
+    const safeMax = Math.max(episodeMinMinutes, episodeMaxMinutes)
+    onSubmit({
+      title,
+      genre,
+      visualStyle,
+      storyline,
+      totalEpisodes,
+      episodeMinMinutes: safeMin,
+      episodeMaxMinutes: safeMax,
+      characters,
+    })
   }
 
   return (
@@ -171,6 +187,46 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs text-muted-foreground">每集时长范围（分钟）</Label>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <Select
+                    value={String(episodeMinMinutes)}
+                    onValueChange={(v) => setEpisodeMinMinutes(Number(v))}
+                  >
+                    <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {durationOptions.map((n) => (
+                        <SelectItem key={`min-${n}`} value={String(n)}>
+                          {n} 分钟
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">至</span>
+                  <Select
+                    value={String(episodeMaxMinutes)}
+                    onValueChange={(v) => setEpisodeMaxMinutes(Number(v))}
+                  >
+                    <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {durationOptions.map((n) => (
+                        <SelectItem key={`max-${n}`} value={String(n)}>
+                          {n} 分钟
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  例如 1-1.5 分钟；生成分镜时会按该区间约束单集总时长。
+                </p>
               </div>
 
               <div className="grid gap-1.5">

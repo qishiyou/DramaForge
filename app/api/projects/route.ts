@@ -44,6 +44,8 @@ export async function POST(req: Request) {
 
     const body = await req.json()
     const totalEpisodes = Number(body.totalEpisodes) || 1
+    const episodeMinMinutes = Math.max(0.5, Number(body.episodeMinMinutes) || 1)
+    const episodeMaxMinutes = Math.max(episodeMinMinutes, Number(body.episodeMaxMinutes) || 1.5)
 
     const episodes: Episode[] = Array.from({ length: totalEpisodes }, (_, i) => ({
       id: crypto.randomUUID(),
@@ -60,6 +62,8 @@ export async function POST(req: Request) {
       visual_style: body.visualStyle,
       storyline: body.storyline,
       total_episodes: totalEpisodes,
+      episode_min_minutes: episodeMinMinutes,
+      episode_max_minutes: episodeMaxMinutes,
       characters: body.characters ?? [],
       episodes,
     })

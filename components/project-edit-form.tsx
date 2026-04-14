@@ -48,6 +48,7 @@ function normalizeCharacter(c: Character): Character {
 }
 
 export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormProps) {
+  const durationOptions = [0.5, 1, 1.5, 2, 2.5, 3]
   const [title, setTitle] = useState(project.title)
   const [genre, setGenre] = useState<Genre>(project.genre)
   const [visualStyle, setVisualStyle] = useState<VisualStyle>(project.visualStyle)
@@ -55,6 +56,8 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
   const [totalEpisodes, setTotalEpisodes] = useState(
     project.episodes.length > 0 ? project.episodes.length : project.totalEpisodes
   )
+  const [episodeMinMinutes, setEpisodeMinMinutes] = useState(project.episodeMinMinutes ?? 1)
+  const [episodeMaxMinutes, setEpisodeMaxMinutes] = useState(project.episodeMaxMinutes ?? 1.5)
   const [characters, setCharacters] = useState<Character[]>(() =>
     project.characters.length > 0
       ? project.characters.map(normalizeCharacter)
@@ -126,6 +129,8 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
     setSaving(true)
     try {
       const nextEpisodes = adjustEpisodesForTotalCount(project.episodes, totalEpisodes)
+      const safeMin = Math.min(episodeMinMinutes, episodeMaxMinutes)
+      const safeMax = Math.max(episodeMinMinutes, episodeMaxMinutes)
       const res = await fetch(`/api/projects/${project.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -135,6 +140,8 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
           visualStyle,
           storyline,
           totalEpisodes,
+          episodeMinMinutes: safeMin,
+          episodeMaxMinutes: safeMax,
           characters,
           episodes: nextEpisodes,
         }),
@@ -213,6 +220,46 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs text-muted-foreground">每集时长范围（分钟）</Label>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <Select
+                    value={String(episodeMinMinutes)}
+                    onValueChange={(v) => setEpisodeMinMinutes(Number(v))}
+                  >
+                    <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {durationOptions.map((n) => (
+                        <SelectItem key={`edit-min-${n}`} value={String(n)}>
+                          {n} 分钟
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">至</span>
+                  <Select
+                    value={String(episodeMaxMinutes)}
+                    onValueChange={(v) => setEpisodeMaxMinutes(Number(v))}
+                  >
+                    <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {durationOptions.map((n) => (
+                        <SelectItem key={`edit-max-${n}`} value={String(n)}>
+                          {n} 分钟
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  例如 1-1.5 分钟；重新生成分镜时会按该区间约束。
+                </p>
               </div>
 
               <div className="grid gap-1.5">
