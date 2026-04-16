@@ -199,164 +199,173 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
 
         <section className="mb-6">
           <h3 className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            基本信息
+            项目配置
           </h3>
-          <div className="rounded-xl border border-border/60 bg-card p-5">
-            <div className="grid gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="edit-title" className="text-xs text-muted-foreground">
-                  短剧标题
-                </Label>
-                <Input
-                  id="edit-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  className="border-border/60 bg-secondary/50 text-sm"
-                />
-              </div>
-
-              <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">剧本类型</Label>
-                <GenreSelector value={genre} onChange={setGenre} />
-              </div>
-
-              <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">视觉风格</Label>
-                <VisualStyleSelector value={visualStyle} onChange={setVisualStyle} />
-              </div>
-
-              <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">剧集数量</Label>
-                <Select
-                  value={String(totalEpisodes)}
-                  onValueChange={(v) => setTotalEpisodes(Number(v))}
-                >
-                  <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 100 }, (_, i) => i + 1).map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {n} 集
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">每集时长范围（分钟）</Label>
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <Select
-                    value={String(episodeMinMinutes)}
-                    onValueChange={(v) => setEpisodeMinMinutes(Number(v))}
-                  >
-                    <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {durationOptions.map((n) => (
-                        <SelectItem key={`edit-min-${n}`} value={String(n)}>
-                          {n} 分钟
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-xs text-muted-foreground">至</span>
-                  <Select
-                    value={String(episodeMaxMinutes)}
-                    onValueChange={(v) => setEpisodeMaxMinutes(Number(v))}
-                  >
-                    <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {durationOptions.map((n) => (
-                        <SelectItem key={`edit-max-${n}`} value={String(n)}>
-                          {n} 分钟
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="rounded-xl border border-border/60 bg-card p-5 lg:col-span-7">
+              <div className="grid gap-4">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="edit-title" className="text-xs text-muted-foreground">
+                    短剧标题
+                  </Label>
+                  <Input
+                    id="edit-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="border-border/60 bg-secondary/50 text-sm"
+                  />
                 </div>
+
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-muted-foreground">剧本类型</Label>
+                  <GenreSelector value={genre} onChange={setGenre} />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-muted-foreground">视觉风格</Label>
+                  <VisualStyleSelector value={visualStyle} onChange={setVisualStyle} />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs text-muted-foreground">剧集数量</Label>
+                    <Select
+                      value={String(totalEpisodes)}
+                      onValueChange={(v) => setTotalEpisodes(Number(v))}
+                    >
+                      <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 100 }, (_, i) => i + 1).map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n} 集
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs text-muted-foreground">每集时长范围（分钟）</Label>
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                      <Select
+                        value={String(episodeMinMinutes)}
+                        onValueChange={(v) => setEpisodeMinMinutes(Number(v))}
+                      >
+                        <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {durationOptions.map((n) => (
+                            <SelectItem key={`edit-min-${n}`} value={String(n)}>
+                              {n} 分钟
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-xs text-muted-foreground">至</span>
+                      <Select
+                        value={String(episodeMaxMinutes)}
+                        onValueChange={(v) => setEpisodeMaxMinutes(Number(v))}
+                      >
+                        <SelectTrigger className="border-border/60 bg-secondary/50 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {durationOptions.map((n) => (
+                            <SelectItem key={`edit-max-${n}`} value={String(n)}>
+                              {n} 分钟
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
                 <p className="text-[10px] text-muted-foreground">
                   例如 1-1.5 分钟；重新生成分镜时会按该区间约束。
                 </p>
               </div>
+            </div>
 
-              <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">剧本文档（可选）</Label>
-                <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Label
-                      htmlFor="edit-script-upload"
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/70 bg-background px-2.5 py-1.5 text-xs hover:bg-accent"
-                    >
-                      {uploadingScript ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                      上传文档
-                    </Label>
-                    <Input
-                      id="edit-script-upload"
-                      type="file"
-                      accept=".doc,.docx,.md,.markdown,.txt,.pdf"
-                      className="hidden"
-                      disabled={uploadingScript || saving}
-                      onChange={(e) => {
-                        const f = e.target.files?.[0]
-                        if (f) void handleScriptUpload(f)
-                      }}
-                    />
-                    <span className="text-[10px] text-muted-foreground">支持 Word / MD / TXT / PDF，最大 20MB</span>
-                  </div>
-                  {scriptFile && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <FileText className="h-3.5 w-3.5 text-primary" />
-                      <a
-                        href={scriptFile.url || '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="truncate text-xs text-primary hover:underline"
+            <div className="rounded-xl border border-border/60 bg-card p-5 lg:col-span-5">
+              <div className="grid gap-4">
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-muted-foreground">剧本文档（可选）</Label>
+                  <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Label
+                        htmlFor="edit-script-upload"
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/70 bg-background px-2.5 py-1.5 text-xs hover:bg-accent"
                       >
-                        {scriptFile.name}
-                      </a>
+                        {uploadingScript ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                        上传文档
+                      </Label>
+                      <Input
+                        id="edit-script-upload"
+                        type="file"
+                        accept=".doc,.docx,.md,.markdown,.txt,.pdf"
+                        className="hidden"
+                        disabled={uploadingScript || saving}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0]
+                          if (f) void handleScriptUpload(f)
+                        }}
+                      />
+                      <span className="text-[10px] text-muted-foreground">Word / MD / TXT / PDF，最大 20MB</span>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Label htmlFor="edit-storyline" className="text-xs text-muted-foreground">
-                    故事梗概
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1 text-xs shrink-0"
-                    disabled={extracting || saving}
-                    onClick={extractCharactersFromStoryline}
-                  >
-                    {extracting ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Wand2 className="h-3 w-3" />
+                    {scriptFile && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        <a
+                          href={scriptFile.url || '#'}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="truncate text-xs text-primary hover:underline"
+                        >
+                          {scriptFile.name}
+                        </a>
+                      </div>
                     )}
-                    从梗概提取角色
-                  </Button>
+                  </div>
                 </div>
-                <Textarea
-                  id="edit-storyline"
-                  rows={4}
-                  value={storyline}
-                  onChange={(e) => setStoryline(e.target.value)}
-                  required
-                  className="border-border/60 bg-secondary/50 text-sm resize-none"
-                />
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  修改梗概后可一键重新提取角色（将覆盖当前角色列表，保存前请确认）。
-                </p>
+
+                <div className="grid gap-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Label htmlFor="edit-storyline" className="text-xs text-muted-foreground">
+                      故事梗概
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 gap-1 text-xs shrink-0"
+                      disabled={extracting || saving}
+                      onClick={extractCharactersFromStoryline}
+                    >
+                      {extracting ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-3 w-3" />
+                      )}
+                      从梗概提取角色
+                    </Button>
+                  </div>
+                  <Textarea
+                    id="edit-storyline"
+                    rows={10}
+                    value={storyline}
+                    onChange={(e) => setStoryline(e.target.value)}
+                    required
+                    className="border-border/60 bg-secondary/50 text-sm resize-none"
+                  />
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    修改梗概后可一键重新提取角色（将覆盖当前角色列表，保存前请确认）。
+                  </p>
+                </div>
               </div>
             </div>
           </div>
