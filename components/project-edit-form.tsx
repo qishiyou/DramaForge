@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2, UserPlus, Pencil, Loader2, Wand2 } from 'lucide-react'
+import { Trash2, UserPlus, Pencil, Loader2, Wand2, Upload, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +16,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { GenreSelector } from '@/components/genre-selector'
 import { VisualStyleSelector } from '@/components/visual-style-selector'
-import type { Character, Genre, VisualStyle, Project } from '@/lib/types'
+import type { Character, Genre, VisualStyle, Project, ScriptFileMeta } from '@/lib/types'
 import { adjustEpisodesForTotalCount } from '@/lib/adjust-episodes'
 import { assignCharacterIds } from '@/lib/normalize-ai-characters'
 import { toast } from 'sonner'
@@ -58,6 +58,7 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
   )
   const [episodeMinMinutes, setEpisodeMinMinutes] = useState(project.episodeMinMinutes ?? 1)
   const [episodeMaxMinutes, setEpisodeMaxMinutes] = useState(project.episodeMaxMinutes ?? 1.5)
+  const [scriptFile, setScriptFile] = useState<ScriptFileMeta | null>(project.scriptFile ?? null)
   const [characters, setCharacters] = useState<Character[]>(() =>
     project.characters.length > 0
       ? project.characters.map(normalizeCharacter)
@@ -65,6 +66,7 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
   )
   const [saving, setSaving] = useState(false)
   const [extracting, setExtracting] = useState(false)
+  const [uploadingScript, setUploadingScript] = useState(false)
 
   const extractCharactersFromStoryline = async () => {
     const t = storyline.trim()
@@ -142,6 +144,7 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
           totalEpisodes,
           episodeMinMinutes: safeMin,
           episodeMaxMinutes: safeMax,
+          scriptFile,
           characters,
           episodes: nextEpisodes,
         }),
@@ -154,6 +157,26 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
       toast.error('保存失败，请重试')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleScriptUpload = async (file: File) => {
+    setUploadingScript(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/uploads/script', { method: 'POST', body: formData })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(typeof data.error === 'string' ? data.error : '上传失败')
+        return
+      }
+      setScriptFile(data as ScriptFileMeta)
+      toast.success('剧本文档上传成功')
+    } catch {
+      toast.error('上传失败，请重试')
+    } finally {
+      setUploadingScript(false)
     }
   }
 
@@ -260,6 +283,46 @@ export function ProjectEditForm({ project, onSaved, onCancel }: ProjectEditFormP
                 <p className="text-[10px] text-muted-foreground">
                   例如 1-1.5 分钟；重新生成分镜时会按该区间约束。
                 </p>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs text-muted-foreground">剧本文档（可选）</Label>
+                <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label
+                      htmlFor="edit-script-upload"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/70 bg-background px-2.5 py-1.5 text-xs hover:bg-accent"
+                    >
+                      {uploadingScript ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                      上传文档
+                    </Label>
+                    <Input
+                      id="edit-script-upload"
+                      type="file"
+                      accept=".doc,.docx,.md,.markdown,.txt,.pdf"
+                      className="hidden"
+                      disabled={uploadingScript || saving}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0]
+                        if (f) void handleScriptUpload(f)
+                      }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">支持 Word / MD / TXT / PDF，最大 20MB</span>
+                  </div>
+                  {scriptFile && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <FileText className="h-3.5 w-3.5 text-primary" />
+                      <a
+                        href={scriptFile.url || '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="truncate text-xs text-primary hover:underline"
+                      >
+                        {scriptFile.name}
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-1.5">

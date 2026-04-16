@@ -67,6 +67,14 @@ export interface Character {
   role: string
 }
 
+export interface ScriptFileMeta {
+  path: string
+  name: string
+  mimeType: string
+  size: number
+  url?: string
+}
+
 export interface StoryboardEntry {
   id: string
   sceneNumber: number
@@ -81,6 +89,10 @@ export interface StoryboardEntry {
   voiceOver: string // 画外音
   colorTone: string // 画面色调
   aiVideoPrompt: string // AI 视频生成提示词（中文）
+  promptQuality?: {
+    score: number
+    issues: string[]
+  }
 }
 
 export interface Episode {
@@ -103,6 +115,7 @@ export interface Project {
   episodeMinMinutes: number
   /** 每集最大时长（分钟） */
   episodeMaxMinutes: number
+  scriptFile?: ScriptFileMeta | null
   characters: Character[]
   episodes: Episode[]
   status: ProjectStatus

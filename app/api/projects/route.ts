@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ensureProfileForUser } from '@/lib/supabase/ensure-profile'
 import { createProjectForUser, fetchProjectsForUser } from '@/lib/supabase/project-service'
-import type { Episode } from '@/lib/types'
+import type { Episode, ScriptFileMeta } from '@/lib/types'
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status })
@@ -46,6 +46,10 @@ export async function POST(req: Request) {
     const totalEpisodes = Number(body.totalEpisodes) || 1
     const episodeMinMinutes = Math.max(0.5, Number(body.episodeMinMinutes) || 1)
     const episodeMaxMinutes = Math.max(episodeMinMinutes, Number(body.episodeMaxMinutes) || 1.5)
+    const scriptFile =
+      body.scriptFile && typeof body.scriptFile === 'object'
+        ? (body.scriptFile as ScriptFileMeta)
+        : null
 
     const episodes: Episode[] = Array.from({ length: totalEpisodes }, (_, i) => ({
       id: crypto.randomUUID(),
@@ -64,6 +68,7 @@ export async function POST(req: Request) {
       total_episodes: totalEpisodes,
       episode_min_minutes: episodeMinMinutes,
       episode_max_minutes: episodeMaxMinutes,
+      script_file: scriptFile,
       characters: body.characters ?? [],
       episodes,
     })

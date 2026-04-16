@@ -5,6 +5,7 @@ import type {
   Character,
   Episode,
   StoryboardEntry,
+  ScriptFileMeta,
   Genre,
   VisualStyle,
   ProjectStatus,
@@ -14,6 +15,7 @@ type ProjectRow = Database['public']['Tables']['projects']['Row']
 type CharacterRow = Database['public']['Tables']['characters']['Row']
 type EpisodeRow = Database['public']['Tables']['episodes']['Row']
 type StoryboardRow = Database['public']['Tables']['storyboard_entries']['Row']
+const SCRIPT_BUCKET = 'script-documents'
 
 function mapStoryboard(row: StoryboardRow): StoryboardEntry {
   return {
@@ -61,6 +63,16 @@ function mapProject(
   characters: Character[],
   episodes: Episode[]
 ): Project {
+  let scriptFile: ScriptFileMeta | null = null
+  if (row.script_file_path && row.script_file_name && row.script_file_mime_type && row.script_file_size != null) {
+    scriptFile = {
+      path: row.script_file_path,
+      name: row.script_file_name,
+      mimeType: row.script_file_mime_type,
+      size: row.script_file_size,
+    }
+  }
+
   return {
     id: row.id,
     title: row.title,
@@ -70,6 +82,7 @@ function mapProject(
     totalEpisodes: row.total_episodes,
     episodeMinMinutes: row.episode_min_minutes ?? 1,
     episodeMaxMinutes: row.episode_max_minutes ?? 1.5,
+    scriptFile,
     status: row.status as ProjectStatus,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -152,6 +165,12 @@ async function assembleProjects(
   const epsByProject = groupBy(epRows ?? [], 'project_id')
   const sbByEpisode = groupBy(sbRows ?? [], 'episode_id')
 
+  const getPublicUrl = (path: string | null) => {
+    if (!path) return undefined
+    const { data } = supabase.storage.from(SCRIPT_BUCKET).getPublicUrl(path)
+    return data.publicUrl || undefined
+  }
+
   return projectRows.map((pr) => {
     const chars = (charsByProject.get(pr.id) ?? [])
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -160,7 +179,11 @@ async function assembleProjects(
       const sbs = (sbByEpisode.get(er.id) ?? []).map(mapStoryboard)
       return mapEpisode(er, sbs)
     })
-    return mapProject(pr, chars, eps)
+    const base = mapProject(pr, chars, eps)
+    if (base.scriptFile?.path) {
+      base.scriptFile = { ...base.scriptFile, url: getPublicUrl(base.scriptFile.path) }
+    }
+    return base
   })
 }
 
@@ -193,6 +216,7 @@ export async function createProjectForUser(
     total_episodes: number
     episode_min_minutes: number
     episode_max_minutes: number
+    script_file?: ScriptFileMeta | null
     characters: Character[]
     episodes: Episode[]
   }
@@ -210,6 +234,10 @@ export async function createProjectForUser(
     total_episodes: body.total_episodes,
     episode_min_minutes: body.episode_min_minutes,
     episode_max_minutes: body.episode_max_minutes,
+    script_file_path: body.script_file?.path ?? null,
+    script_file_name: body.script_file?.name ?? null,
+    script_file_mime_type: body.script_file?.mimeType ?? null,
+    script_file_size: body.script_file?.size ?? null,
     status: '草稿',
     created_at: now,
     updated_at: now,
@@ -259,6 +287,7 @@ export type ProjectUpdateInput = Partial<{
   total_episodes: number
   episode_min_minutes: number
   episode_max_minutes: number
+  script_file: ScriptFileMeta | null
   status: string
   characters: Character[]
   episodes: Episode[]
@@ -282,6 +311,12 @@ export async function updateProjectForUser(
   if (patch.total_episodes !== undefined) row.total_episodes = patch.total_episodes
   if (patch.episode_min_minutes !== undefined) row.episode_min_minutes = patch.episode_min_minutes
   if (patch.episode_max_minutes !== undefined) row.episode_max_minutes = patch.episode_max_minutes
+  if (patch.script_file !== undefined) {
+    row.script_file_path = patch.script_file?.path ?? null
+    row.script_file_name = patch.script_file?.name ?? null
+    row.script_file_mime_type = patch.script_file?.mimeType ?? null
+    row.script_file_size = patch.script_file?.size ?? null
+  }
   if (patch.status !== undefined) row.status = patch.status
 
   const touchesProjectRow =
@@ -292,6 +327,7 @@ export async function updateProjectForUser(
     patch.total_episodes !== undefined ||
     patch.episode_min_minutes !== undefined ||
     patch.episode_max_minutes !== undefined ||
+    patch.script_file !== undefined ||
     patch.status !== undefined ||
     patch.characters !== undefined ||
     patch.episodes !== undefined

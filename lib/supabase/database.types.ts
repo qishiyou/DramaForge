@@ -47,6 +47,10 @@ export interface Database {
           total_episodes: number
           episode_min_minutes: number
           episode_max_minutes: number
+          script_file_path: string | null
+          script_file_name: string | null
+          script_file_mime_type: string | null
+          script_file_size: number | null
           status: string
           created_at: string
           updated_at: string
@@ -62,6 +66,10 @@ export interface Database {
           total_episodes: number
           episode_min_minutes?: number
           episode_max_minutes?: number
+          script_file_path?: string | null
+          script_file_name?: string | null
+          script_file_mime_type?: string | null
+          script_file_size?: number | null
           status?: string
           created_at?: string
           updated_at?: string
@@ -76,6 +84,10 @@ export interface Database {
           total_episodes?: number
           episode_min_minutes?: number
           episode_max_minutes?: number
+          script_file_path?: string | null
+          script_file_name?: string | null
+          script_file_mime_type?: string | null
+          script_file_size?: number | null
           status?: string
           created_at?: string
           updated_at?: string

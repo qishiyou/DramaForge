@@ -10,7 +10,7 @@ import { ProjectEditForm } from '@/components/project-edit-form'
 import { ProjectDetail } from '@/components/project-detail'
 import { SupabaseConfigWarning } from '@/components/supabase-config-warning'
 import { useAuth } from '@/lib/supabase/auth-context'
-import type { Project, Genre, VisualStyle, Character } from '@/lib/types'
+import type { Project, Genre, VisualStyle, Character, ScriptFileMeta } from '@/lib/types'
 import { toast } from 'sonner'
 
 type View = 'dashboard' | 'create' | 'detail' | 'edit'
@@ -155,6 +155,7 @@ export function HomeContent() {
       totalEpisodes: number
       episodeMinMinutes: number
       episodeMaxMinutes: number
+      scriptFile: ScriptFileMeta | null
       characters: Character[]
     }) => {
       setCreating(true)

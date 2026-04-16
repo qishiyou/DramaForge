@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import {
   Sparkles, Loader2, Download,
-  Layers, ChevronRight, Check, Save, Cloud, FileText, Pencil,
+  Layers, ChevronRight, Check, Save, Cloud, FileText, Pencil, Paperclip,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -288,6 +288,17 @@ export function ProjectDetail({ project, onUpdate, onEditProject }: ProjectDetai
             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
               {project.visualStyle}
             </Badge>
+            {project.scriptFile?.name && (
+              <a
+                href={project.scriptFile.url || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0 text-[10px] text-primary hover:bg-accent"
+              >
+                <Paperclip className="h-3 w-3" />
+                <span className="max-w-[120px] truncate">{project.scriptFile.name}</span>
+              </a>
+            )}
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-md bg-secondary/50 px-1 py-1.5">

@@ -15,9 +15,14 @@ type StoryboardScene = {
   voiceOver: string;
   colorTone: string;
   aiVideoPrompt: string;
+  promptQuality?: {
+    score: number;
+    issues: string[];
+  };
 };
 
 const CAMERA_EXECUTION_KEYWORDS = ['跟拍', '推镜', '拉镜', '摇镜', '移镜', '升降', '手持', '固定机位', '轨道'];
+const QUALITY_PASS_SCORE = 7;
 
 function toAtTag(raw: string, fallback: string): string {
   const cleaned = raw.replace(/[@，,。；;、\s]/g, '');
@@ -121,6 +126,119 @@ function ensurePromptStructure(
     output = output.replace(/时长：\S+秒/g, `时长：${duration}`);
   }
   return output;
+}
+
+type PromptQualityResult = {
+  score: number;
+  issues: string[];
+};
+
+function evaluatePromptQuality(
+  prompt: string,
+  sceneDescription: string,
+  cameraMovement: string,
+  dialogue: string,
+  duration: string
+): PromptQualityResult {
+  let score = 0;
+  const issues: string[] = [];
+  const text = prompt || '';
+
+  if (text.includes('画面描述：') && sceneDescription.trim().length > 20) {
+    score += 2;
+  } else {
+    issues.push('缺少画面描述或场景信息不足');
+  }
+
+  if (text.includes('镜头调度：') && cameraMovement.trim().length > 8) {
+    score += 2;
+  } else {
+    issues.push('缺少可执行镜头调度');
+  }
+
+  if (text.includes('对白：')) {
+    score += 2;
+  } else {
+    issues.push('缺少对白段落');
+  }
+
+  if (/镜头衔接：/m.test(text)) {
+    score += 2;
+  } else {
+    issues.push('缺少镜头衔接依据');
+  }
+
+  if (new RegExp(`时长：${duration.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(text)) {
+    score += 2;
+  } else {
+    issues.push('时长字段与 duration 不一致');
+  }
+
+  if (!dialogue.trim() && /对白：\s*无对白/.test(text)) {
+    score = Math.max(score, 8);
+  }
+
+  return { score, issues };
+}
+
+function validateAndRepairPrompt(
+  scene: StoryboardScene,
+  sceneTag: string,
+  characterTag: string,
+  continuityLine: string,
+  cameraMovement: string,
+  sceneDescription: string
+): { aiVideoPrompt: string; qualityScore: number; qualityIssues: string[] } {
+  const repaired = ensurePromptStructure(
+    scene.aiVideoPrompt,
+    scene.duration,
+    sceneTag,
+    characterTag,
+    sceneDescription,
+    cameraMovement,
+    scene.dialogue,
+    continuityLine
+  );
+
+  const quality = evaluatePromptQuality(
+    repaired,
+    sceneDescription,
+    cameraMovement,
+    scene.dialogue,
+    scene.duration
+  );
+
+  if (quality.score >= QUALITY_PASS_SCORE) {
+    return { aiVideoPrompt: repaired, qualityScore: quality.score, qualityIssues: quality.issues };
+  }
+
+  const fallback = [
+    `0-${scene.duration.replace('秒', '')}秒`,
+    '时间：日',
+    `场景图片：${sceneTag}`,
+    `镜头调度：${cameraMovement}`,
+    `画面描述：${sceneDescription}`,
+    `表演与动作：${characterTag} ${scene.dialogue || '完成本镜核心动作并保持情绪连续。'}`,
+    `对白：${scene.dialogue || '无对白'}`,
+    '音色：青年音色，语速与动作强度同步。',
+    `特效：结合${sceneTag}环境添加轻量信息层，不遮挡主体动作。`,
+    continuityLine,
+    `时长：${scene.duration}`,
+  ].join('\n');
+
+  const fallbackQuality = evaluatePromptQuality(
+    fallback,
+    sceneDescription,
+    cameraMovement,
+    scene.dialogue,
+    scene.duration
+  );
+
+  return {
+    aiVideoPrompt: fallback,
+    qualityScore: fallbackQuality.score,
+    qualityIssues: fallbackQuality.issues,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -312,15 +430,13 @@ export async function POST(request: NextRequest) {
       const continuityLine = buildContinuityLine(index, allScenes.length);
       const cameraMovement = ensureExecutableCameraMovement(scene.cameraMovement, characterTag);
       const sceneDescription = ensureSceneAndCharacterInText(scene.sceneDescription, sceneTag, characterTag);
-      const aiVideoPrompt = ensurePromptStructure(
-        scene.aiVideoPrompt,
-        scene.duration,
+      const { aiVideoPrompt, qualityScore, qualityIssues } = validateAndRepairPrompt(
+        scene,
         sceneTag,
         characterTag,
-        sceneDescription,
+        continuityLine,
         cameraMovement,
-        scene.dialogue,
-        continuityLine
+        sceneDescription
       );
 
       return {
@@ -330,6 +446,10 @@ export async function POST(request: NextRequest) {
           ? sceneDescription
           : `${sceneDescription}\n${continuityLine}`,
         aiVideoPrompt,
+        promptQuality: {
+          score: qualityScore,
+          issues: qualityIssues,
+        },
       };
     });
 

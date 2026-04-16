@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2, UserPlus, Clapperboard, Sparkles, Wand2, Loader2 } from 'lucide-react'
+import { Trash2, UserPlus, Clapperboard, Sparkles, Wand2, Loader2, Upload, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +16,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { GenreSelector } from '@/components/genre-selector'
 import { VisualStyleSelector } from '@/components/visual-style-selector'
-import type { Character, Genre, VisualStyle } from '@/lib/types'
+import type { Character, Genre, VisualStyle, ScriptFileMeta } from '@/lib/types'
 import { assignCharacterIds } from '@/lib/normalize-ai-characters'
 import { toast } from 'sonner'
 
@@ -29,6 +29,7 @@ interface ProjectFormProps {
     totalEpisodes: number
     episodeMinMinutes: number
     episodeMaxMinutes: number
+    scriptFile: ScriptFileMeta | null
     characters: Character[]
   }) => void
   onCancel: () => void
@@ -57,6 +58,8 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
   const [totalEpisodes, setTotalEpisodes] = useState(3)
   const [episodeMinMinutes, setEpisodeMinMinutes] = useState(1)
   const [episodeMaxMinutes, setEpisodeMaxMinutes] = useState(1.5)
+  const [scriptFile, setScriptFile] = useState<ScriptFileMeta | null>(null)
+  const [uploadingScript, setUploadingScript] = useState(false)
   const [characters, setCharacters] = useState<Character[]>([createEmptyCharacter()])
   const [extracting, setExtracting] = useState(false)
 
@@ -119,8 +122,29 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
       totalEpisodes,
       episodeMinMinutes: safeMin,
       episodeMaxMinutes: safeMax,
+      scriptFile,
       characters,
     })
+  }
+
+  const handleScriptUpload = async (file: File) => {
+    setUploadingScript(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/uploads/script', { method: 'POST', body: formData })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(typeof data.error === 'string' ? data.error : '上传失败')
+        return
+      }
+      setScriptFile(data as ScriptFileMeta)
+      toast.success('剧本文档上传成功')
+    } catch {
+      toast.error('上传失败，请重试')
+    } finally {
+      setUploadingScript(false)
+    }
   }
 
   return (
@@ -227,6 +251,39 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
                 <p className="text-[10px] text-muted-foreground">
                   例如 1-1.5 分钟；生成分镜时会按该区间约束单集总时长。
                 </p>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs text-muted-foreground">剧本文档（可选）</Label>
+                <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label
+                      htmlFor="script-upload"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/70 bg-background px-2.5 py-1.5 text-xs hover:bg-accent"
+                    >
+                      {uploadingScript ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                      上传文档
+                    </Label>
+                    <Input
+                      id="script-upload"
+                      type="file"
+                      accept=".doc,.docx,.md,.markdown,.txt,.pdf"
+                      className="hidden"
+                      disabled={uploadingScript || isLoading}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0]
+                        if (f) void handleScriptUpload(f)
+                      }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">支持 Word / MD / TXT / PDF，最大 20MB</span>
+                  </div>
+                  {scriptFile && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-foreground">
+                      <FileText className="h-3.5 w-3.5 text-primary" />
+                      <span className="truncate">{scriptFile.name}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-1.5">

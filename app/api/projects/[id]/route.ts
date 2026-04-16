@@ -6,7 +6,7 @@ import {
   updateProjectForUser,
   type ProjectUpdateInput,
 } from '@/lib/supabase/project-service'
-import type { Character, Episode } from '@/lib/types'
+import type { Character, Episode, ScriptFileMeta } from '@/lib/types'
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status })
@@ -22,6 +22,7 @@ function bodyToPatch(body: Record<string, unknown>): ProjectUpdateInput {
   if (body.totalEpisodes !== undefined) patch.total_episodes = Number(body.totalEpisodes)
   if (body.episodeMinMinutes !== undefined) patch.episode_min_minutes = Number(body.episodeMinMinutes)
   if (body.episodeMaxMinutes !== undefined) patch.episode_max_minutes = Number(body.episodeMaxMinutes)
+  if (body.scriptFile !== undefined) patch.script_file = body.scriptFile as ScriptFileMeta | null
   if (body.status !== undefined) patch.status = body.status as string
   if (body.characters !== undefined) patch.characters = body.characters as Character[]
   if (body.episodes !== undefined) patch.episodes = body.episodes as Episode[]
